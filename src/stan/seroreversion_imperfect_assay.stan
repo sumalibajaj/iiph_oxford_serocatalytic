@@ -2,11 +2,12 @@ functions {
   vector prob_infected_constant_model(
     array[] int ages,
     int n_ages,
-    real foi
+    real foi,
+    real mu
   ) {
     vector[n_ages] prob_infected;
     for (i in 1:n_ages) {
-        prob_infected[i] = 1 - exp(-foi * ages[i]); 
+        prob_infected[i] = foi / (foi + mu) * (1 - exp(-(foi + mu) * ages[i]));  
     }
     return prob_infected;
   }
@@ -34,7 +35,7 @@ parameters {
 
 transformed parameters {
   vector[n_observations] prob_infected;
-  prob_infected = prob_infected_constant_model(age_group,n_observations,foi);
+  prob_infected = prob_infected_constant_model(age_group,n_observations,foi,rate_seroreversion);
 }
 
 model {
@@ -60,7 +61,7 @@ generated quantities{
     foi_expanded[i] = foi;
   }
   // calculate posterior for ages 1 to age_max even if not in data-for plotting
-	prob_infected_expanded = prob_infected_constant_model(ages, age_max, foi);
+	prob_infected_expanded = prob_infected_constant_model(ages, age_max, foi, rate_seroreversion);
 	
 	vector[n_ages_fine] seroprev_fine;
   for (i in 1:n_ages_fine) {
