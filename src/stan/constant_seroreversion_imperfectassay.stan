@@ -40,7 +40,7 @@ transformed parameters {
 
 model {
   for(i in 1:n_observations){
-    real prob_positive = prob_infected[i] * sensitivity + (1 - prob_infected[i]) * specificity;
+    real prob_positive = prob_infected[i] * sensitivity + (1 - prob_infected[i]) * (1-specificity);
     n_seropositive[i] ~ binomial(n_sample[i], prob_positive); // likelihood
   }
   
@@ -51,7 +51,7 @@ model {
 generated quantities{
   vector[n_observations] log_likelihood;
   for(i in 1:n_observations){
-    real prob_positive = prob_infected[i] * sensitivity + (1 - prob_infected[i]) * specificity;
+    real prob_positive = prob_infected[i] * sensitivity + (1 - prob_infected[i]) * (1-specificity);
     log_likelihood[i] = binomial_lpmf(n_seropositive[i] | n_sample[i], prob_positive);
   }
 
@@ -65,6 +65,7 @@ generated quantities{
 	
 	vector[n_ages_fine] seroprev_fine;
   for (i in 1:n_ages_fine) {
-    seroprev_fine[i] = 1 - exp(-foi * ages_fine[i]);
+    real p_inf = foi / (foi + rate_seroreversion) * (1 - exp(-(foi + rate_seroreversion) * ages_fine[i]));
+    seroprev_fine[i] = p_inf * sensitivity + (1 - p_inf) * (1 - specificity); // Adjusted for test performance
   }
 }
